@@ -10,6 +10,9 @@ import utils
 import TD3
 import OurDDPG
 import DDPG
+from dataclasses import dataclass
+import tyro
+from Utility.Timer import get_current_time, time_difference
 
 
 # Runs policy for X episodes and returns average reward
@@ -34,7 +37,41 @@ def eval_policy(policy, env_name, seed, eval_episodes=10):
     return avg_reward
 
 
-def main():
+@dataclass
+class Args:
+    # Policy name (TD3, DDPG or OurDDPG)
+    policy: str = TD3
+    # OpenAI gym environment name
+    env: str = "HalfCheetah-v2"
+    # Sets Gym, PyTorch and Numpy seeds
+    seed: int = 0
+    # Time steps initial random policy is used
+    start_timesteps: int = 25e3
+    # How often (time steps) we evaluate
+    eval_freq: int = 5e3
+    # Max time steps to run environment
+    max_timesteps: int = 1e6
+    # Std of Gaussian exploration noise
+    expl_noise: float = 0.1
+    # Batch size for both actor and critic
+    batch_size: int = 256
+    # Discount factor
+    discount: float = 0.99
+    # Target network update rate
+    tau: float = 0.005
+    # Noise added to target policy during critic update
+    policy_noise: float = 0.2
+    # Range to clip target policy noise
+    noise_clip: float = 0.5
+    # Frequency of delayed policy updates
+    policy_freq: int = 2
+    # Save model and optimizer parameters
+    save_model: str = "store_true"
+    # Model load file name, "" doesn't load, "default" uses file_name
+    load_model: str = ""
+
+
+def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--policy", default="TD3")  # Policy name (TD3, DDPG or OurDDPG)
     parser.add_argument("--env", default="HalfCheetah-v2")  # OpenAI gym environment name
@@ -52,7 +89,12 @@ def main():
     parser.add_argument("--save_model", action="store_true")  # Save model and optimizer parameters
     parser.add_argument("--load_model", default="")  # Model load file name, "" doesn't load, "default" uses file_name
     args = parser.parse_args()
+    return args
 
+
+def main():
+    args = get_args()
+    # args = tyro.cli(Args)
     file_name = f"{args.policy}_{args.env}_{args.seed}"
     print("---------------------------------------")
     print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
@@ -84,6 +126,7 @@ def main():
         "tau": args.tau,
     }
 
+    policy = None
     # Initialize policy
     if args.policy == "TD3":
         # Target policy smoothing is scaled wrt the action scale
@@ -153,8 +196,6 @@ def main():
             np.save(f"./results/{file_name}", evaluations)
             if args.save_model: policy.save(f"./models/{file_name}")
 
-
-from Utility.Timer import *
 
 if __name__ == "__main__":
     start_time = get_current_time()

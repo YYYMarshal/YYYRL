@@ -1,5 +1,5 @@
 .idea
 __pycache__
 
-TD3/learning_curves
+# TD3/learning_curves
 TD3/results
