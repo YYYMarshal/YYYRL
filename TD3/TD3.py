@@ -3,6 +3,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils import ReplayBuffer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -96,7 +97,7 @@ class TD3(object):
         state = torch.FloatTensor(state.reshape(1, -1)).to(device)
         return self.actor(state).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, batch_size=256):
+    def train(self, replay_buffer: ReplayBuffer, batch_size=256):
         self.total_it += 1
 
         # Sample replay buffer
@@ -104,6 +105,11 @@ class TD3(object):
 
         with torch.no_grad():
             # Select action according to policy and add clipped noise
+            """
+            torch.randn_like(action): 
+            生成一个与 action 张量形状相同的张量，其中的元素是从标准正态分布（均值为0，方差为1）中采样得到的随机数。
+            """
+            # 生成与动作张量形状相同的高斯噪声，调整噪声幅度，并按指定范围进行裁剪
             noise = (
                     torch.randn_like(action) * self.policy_noise
             ).clamp(-self.noise_clip, self.noise_clip)

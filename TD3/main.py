@@ -148,13 +148,13 @@ def main():
     # Evaluate untrained policy
     evaluations = [eval_policy(policy, args.env, args.seed)]
 
-    state, done = env.reset(), False
+    # state, done = env.reset(), False
+    state = env.reset()
     episode_reward = 0
     episode_timesteps = 0
     episode_num = 0
 
     for t in range(int(args.max_timesteps)):
-
         episode_timesteps += 1
 
         # Select action randomly or according to policy
@@ -187,7 +187,8 @@ def main():
                   f"Episode T: {episode_timesteps} "
                   f"Reward: {episode_reward:.3f}")
             # Reset environment
-            state, done = env.reset(), False
+            # state, done = env.reset(), False
+            state = env.reset()
             episode_reward = 0
             episode_timesteps = 0
             episode_num += 1
