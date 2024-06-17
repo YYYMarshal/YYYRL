@@ -22,6 +22,8 @@ class ReplayBuffer(object):
         self.next_state[self.ptr] = next_state
         self.reward[self.ptr] = reward
         self.not_done[self.ptr] = 1. - done
+        # print("-------------------")
+        # print(done, self.not_done[self.ptr])
 
         self.ptr = (self.ptr + 1) % self.max_size
         self.size = min(self.size + 1, self.max_size)

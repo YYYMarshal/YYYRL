@@ -40,7 +40,7 @@ def eval_policy(policy, env_name, seed, eval_episodes=10):
 @dataclass
 class Args:
     # Policy name (TD3, DDPG or OurDDPG)
-    policy: str = TD3
+    policy: str = "OurDDPG"
     # OpenAI gym environment name
     env: str = "HalfCheetah-v2"
     # Sets Gym, PyTorch and Numpy seeds
@@ -66,7 +66,8 @@ class Args:
     # Frequency of delayed policy updates
     policy_freq: int = 2
     # Save model and optimizer parameters
-    save_model: str = "store_true"
+    # save_model: str = "store_true"
+    save_model: bool = False
     # Model load file name, "" doesn't load, "default" uses file_name
     load_model: str = ""
 
@@ -93,8 +94,8 @@ def get_args():
 
 
 def main():
-    args = get_args()
-    # args = tyro.cli(Args)
+    # args = get_args()
+    args = tyro.cli(Args)
     file_name = f"{args.policy}_{args.env}_{args.seed}"
     print("---------------------------------------")
     print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
@@ -162,13 +163,16 @@ def main():
             action = env.action_space.sample()
         else:
             action = (
-                    policy.select_action(np.array(state))
-                    + np.random.normal(0, max_action * args.expl_noise, size=action_dim)
+                    policy.select_action(np.array(state)) +
+                    np.random.normal(0, max_action * args.expl_noise, size=action_dim)
             ).clip(-max_action, max_action)
 
         # Perform action
         next_state, reward, done, _ = env.step(action)
         done_bool = float(done) if episode_timesteps < env._max_episode_steps else 0
+        # print("-------------------")
+        # print(episode_timesteps, env._max_episode_steps)
+        # print(done, done_bool)
 
         # Store data in replay buffer
         replay_buffer.add(state, action, next_state, reward, done_bool)

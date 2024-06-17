@@ -11,11 +11,11 @@ def moving_average(y_list: [], window_size: int):
     return np.concatenate((begin, middle, end))
 
 
-def plot(y_list: [], algorithm: str, env_name: str, is_plot_average=False):
-    x_list = list(range(len(y_list)))
-    xlabel = "Episode"
-    ylabel = "Episode Reward"
+def plot(y_list: [], algorithm: str, env_name: str,
+         is_plot_average=False,
+         xlabel="Episode", ylabel="Episode Reward"):
     title = f"{algorithm} on {env_name}"
+    x_list = list(range(len(y_list)))
     plt.plot(x_list, y_list)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -27,6 +27,18 @@ def plot(y_list: [], algorithm: str, env_name: str, is_plot_average=False):
 
     mv_return = moving_average(y_list, 9)
     plt.plot(x_list, mv_return)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.show()
+
+
+def plot_multiple(lists: [], algorithm: str, env_name: str,
+                  xlabel="Steps", ylabel="Reward"):
+    title = f"{algorithm} on {env_name}"
+    for y_list in lists:
+        x_list = list(range(len(y_list)))
+        plt.plot(x_list, y_list)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
