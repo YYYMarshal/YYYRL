@@ -3,11 +3,9 @@ import gym
 import numpy as np
 import torch
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
-from Utility.ReplayBuffer import ReplayBuffer
-from Utility.TrainingProcess import train_off_policy_agent
-from Utility.Plot import plot, moving_average
-from Utility import Timer
+from Utility import ReplayBuffer, TrainingProcess,  Timer
+from dataclasses import dataclass
+import tyro
 
 
 class QNet(torch.nn.Module):
@@ -114,113 +112,59 @@ class DQN:
         self.count += 1
 
 
-def train(env_name: str, dqn_type: str):
-    lr = 2e-3
-    num_episodes = 500
-    # 当 hidden_dim = 128 时：mean_DQN = 141.316
-    # 当 hidden_dim = 512 时：mean_DQN = 153.216
-    hidden_dim = 128
-    gamma = 0.98
-    epsilon = 0.01
-    target_update = 10
-    buffer_size = 10000
+@dataclass
+class Args:
+    agent_name: str = "DQN"
+    env_name: str = "CartPole-v0"
+    num_episodes: int = 500
+    seed: int = 0
+    # learning rate
+    learning_rate: int = 2e-3
+    hidden_dim: int = 128
+    gamma: float = 0.98
+    epsilon: float = 0.01
+    # 经过 target_update 个 step 后目标网络进行更新
+    target_update: int = 10
+    buffer_size: int = 10000
     # 当 buffer 数据的数量超过 minimal_size 后,才进行Q网络训练
-    minimal_size = 500
-    batch_size = 64
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    minimal_size: int = 500
+    batch_size: int = 64
 
-    env = gym.make(env_name)
-    random.seed(0)
-    np.random.seed(0)
-    env.seed(0)
-    torch.manual_seed(0)
+
+def train(args: Args):
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    env = gym.make(args.env_name)
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    env.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
-    print(f"dqn_type = {dqn_type}, device: {device}\n"
-          f"env_name = {env_name}, state_dim = {state_dim}, action_dim = {action_dim}")
+    print(f"dqn_type = {args.agent_name}, device: {device}\n"
+          f"env_name = {args.env_name}, state_dim = {state_dim}, action_dim = {action_dim}")
 
-    agent = DQN(state_dim, hidden_dim, action_dim, lr,
-                gamma, epsilon, target_update, device, dqn_type=dqn_type)
-    replay_buffer = ReplayBuffer(buffer_size)
-    episode_reward_list = train_off_policy_agent(
-        env, agent, num_episodes,
-        replay_buffer, minimal_size, batch_size)
+    agent = DQN(state_dim, args.hidden_dim, action_dim, args.learning_rate,
+                args.gamma, args.epsilon, args.target_update, device, dqn_type=args.agent_name)
+    replay_buffer = ReplayBuffer.ReplayBuffer(args.buffer_size)
+    episode_reward_list = TrainingProcess.train_off_policy_agent(
+        env, agent, args.num_episodes,
+        replay_buffer, args.minimal_size, args.batch_size)
+
+    file_name = f"{args.agent_name}_{args.env_name}_{args.seed}"
+    target_folder_name = "results"
+    np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
+
     return episode_reward_list
 
 
-def main_single_dqn(dqn_type: str):
+def main():
     start_time = Timer.get_current_time()
-    # env_name = "CartPole-v0"
-    env_name = "Acrobot-v1"
-    episode_reward_list = train(env_name, dqn_type)
+    args = tyro.cli(Args)
+    train(args)
     Timer.time_difference(start_time)
-    plot(episode_reward_list, dqn_type, env_name)
-
-
-def main_all_dqn():
-    env_name = "CartPole-v0"
-
-    start_time = Timer.get_current_time()
-    episode_reward_list_dqn = train(env_name, "DQN")
-    Timer.time_difference(start_time)
-    print("---------------------")
-
-    start_time = Timer.get_current_time()
-    episode_reward_list_doubledqn = train(env_name, "DoubleDQN")
-    Timer.time_difference(start_time)
-    print("---------------------")
-
-    start_time = Timer.get_current_time()
-    episode_reward_list_duelingdqn = train(env_name, "DuelingDQN")
-    Timer.time_difference(start_time)
-    print("---------------------")
-
-    xlabel = "Episodes"
-    ylabel = "Returns"
-    title = f"DQN/DoubleDQN/DuelingDQN on {env_name}"
-
-    episodes_list_dqn = list(range(len(episode_reward_list_dqn)))
-    plt.plot(episodes_list_dqn, episode_reward_list_dqn,
-             label="DQN", color="blue")
-
-    episodes_list_doubledqn = list(range(len(episode_reward_list_doubledqn)))
-    plt.plot(episodes_list_doubledqn, episode_reward_list_doubledqn,
-             label="DoubleDQN", color="red")
-
-    episodes_list_duelingdqn = list(range(len(episode_reward_list_duelingdqn)))
-    plt.plot(episodes_list_duelingdqn, episode_reward_list_duelingdqn,
-             label="DuelingDQN", color="green")
-
-    plt.legend()
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.show()
-
-    mv_return_dqn = moving_average(episode_reward_list_dqn, 9)
-    plt.plot(episodes_list_dqn, mv_return_dqn,
-             label="DQN", color="blue")
-
-    mv_return_doubledqn = moving_average(episode_reward_list_doubledqn, 9)
-    plt.plot(episodes_list_doubledqn, mv_return_doubledqn,
-             label="DoubleDQN", color="red")
-
-    mv_return_duelingdqn = moving_average(episode_reward_list_duelingdqn, 9)
-    plt.plot(episodes_list_duelingdqn, mv_return_duelingdqn,
-             label="DuelingDQN", color="green")
-
-    plt.legend()
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.show()
 
 
 if __name__ == '__main__':
-    # CartPole, Reward 的平均值 = 141.316
-    # Acrobot, Episode Reward List 的平均值 = -122.096
-    main_single_dqn("DQN")
-    # main_single_dqn("DoubleDQN")
-    # main_single_dqn("DuelingDQN")
-    # main_all_dqn()
+    main()

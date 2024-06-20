@@ -1,3 +1,8 @@
+"""
+HalfCheetah-v2:
+OurDDPG, seed=0, 1h:05m
+TD3, seed=0, 1h
+"""
 import numpy as np
 import torch
 import gym
@@ -9,10 +14,16 @@ import OurDDPG
 import DDPG
 from dataclasses import dataclass
 import tyro
-from Utility.Timer import get_current_time, time_difference
 import os
+import sys
 
+# Windows下运行mujoco
 os.add_dll_directory(os.environ["USERPROFILE"] + "/.mujoco/mjpro150/bin")
+# （Windows下）运行.sh时，调用相对于当前代码文件夹所在的其他文件夹的代码文件时所需，
+# 然后将所调用的代码文件放在该行代码的下面。
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from Utility.Timer import get_current_time, time_difference
 
 
 # Runs policy for X episodes and returns average reward
@@ -40,11 +51,11 @@ def eval_policy(policy, env_name, seed, eval_episodes=10):
 @dataclass
 class Args:
     # Policy name (TD3, DDPG or OurDDPG)
-    policy: str = "OurDDPG"
+    policy: str = "TD3"
     # OpenAI gym environment name
     env: str = "HalfCheetah-v2"
     # Sets Gym, PyTorch and Numpy seeds
-    seed: int = 0
+    seed: int = 7
     # Time steps initial random policy is used
     start_timesteps: int = 25e3
     # How often (time steps) we evaluate

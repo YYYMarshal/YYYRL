@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from ReplayBuffer import ReplayBuffer
+from Utility.ReplayBuffer import ReplayBuffer
 
 
 def train_on_policy_agent(env, agent, num_episodes,

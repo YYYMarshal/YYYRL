@@ -2,9 +2,9 @@ import gym
 import numpy as np
 import torch
 import torch.nn.functional as F
-from Utility.TrainingProcess import train_on_policy_agent
-from Utility.Plot import plot
-from Utility import Timer
+from Utility import TrainingProcess, Timer
+from dataclasses import dataclass
+import tyro
 
 
 class PolicyNet(torch.nn.Module):
@@ -75,7 +75,7 @@ class ActorCritic:
         actor_loss = torch.mean(-log_probs * td_error.detach())
         # 均方误差损失函数
         critic_loss = torch.mean(F.mse_loss(self.critic(states), td_target.detach()))
-        
+
         self.actor_optimizer.zero_grad()
         self.critic_optimizer.zero_grad()
         actor_loss.backward()  # 计算策略网络的梯度
@@ -84,36 +84,45 @@ class ActorCritic:
         self.critic_optimizer.step()  # 更新价值网络的参数
 
 
-def train(env_name: str):
+@dataclass
+class Args:
+    agent_name: str = "ActorCritic"
+    env_name: str = "CartPole-v0"
+    seed = 0
     actor_lr = 1e-3
     critic_lr = 1e-2
     num_episodes = 1000
     hidden_dim = 128
     gamma = 0.98
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-    env = gym.make(env_name)
-    env.seed(0)
-    torch.manual_seed(0)
+
+def train(args: Args):
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    env = gym.make(args.env_name)
+
+    env.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
-    print(f"device: {device}\n"
-          f"env_name = {env_name}, state_dim = {state_dim}, action_dim = {action_dim}")
+    print(f"agent_name = {args.agent_name}, device: {device}\n"
+          f"env_name = {args.env_name}, state_dim = {state_dim}, action_dim = {action_dim}")
 
-    agent = ActorCritic(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, gamma, device)
+    agent = ActorCritic(state_dim, args.hidden_dim, action_dim, args.actor_lr, args.critic_lr, args.gamma, device)
+    episode_reward_list = TrainingProcess.train_on_policy_agent(env, agent, args.num_episodes)
 
-    episode_reward_list = train_on_policy_agent(env, agent, num_episodes)
-    # episode_reward_list 的平均值 = 146.496
+    file_name = f"{args.agent_name}_{args.env_name}_{args.seed}"
+    target_folder_name = "results"
+    np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
+
     return episode_reward_list
 
 
 def main():
     start_time = Timer.get_current_time()
-    env_name = "CartPole-v0"
-    return_list = train(env_name)
+    args = tyro.cli(Args)
+    train(args)
     Timer.time_difference(start_time)
-    plot(return_list, "Actor Critic", env_name)
 
 
 if __name__ == "__main__":
