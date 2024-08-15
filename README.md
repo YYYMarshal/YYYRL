@@ -10,6 +10,10 @@ pip install "cython<3"
 pip install glfw
 pip install imageio
 pip install matplotlib
+
+# 2024-8-15 19:37:04
+# env.render() 时出错，解决方案：
+pip install pyglet==1.5.0
 ```
 
 并将 `mujoco_py` 文件夹放入 `S:\Users\YYYXB\anaconda3\envs\YYYRL\Lib\site-packages` 中。

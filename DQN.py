@@ -3,7 +3,7 @@ import gym
 import numpy as np
 import torch
 import torch.nn.functional as F
-from Utility import ReplayBuffer, TrainingProcess,  Timer
+from Utility import ReplayBuffer, TrainingProcess, Timer
 from dataclasses import dataclass
 import tyro
 
@@ -76,16 +76,22 @@ class DQN:
         # 利用
         else:
             state = torch.tensor(np.array([state]), dtype=torch.float).to(self.device)
+            # self.q_net(state).argmax()：选取Q网络中对应state时的值最大的索引，类型是tensor，比如tensor(2)
+            # self.q_net(state).argmax().item()：取具体的值，比如上一步是tensor(2)，则.item()会返回2
             action = self.q_net(state).argmax().item()
         return action
 
     def update(self, transition_dict):
+        # 示例中，batch_size = 64，state_dim = 4，所以 states.shape 是 torch.Size([64, 4])
         states = torch.tensor(transition_dict['states'], dtype=torch.float).to(self.device)
         actions = torch.tensor(transition_dict['actions']).view(-1, 1).to(self.device)
         rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1, 1).to(self.device)
         next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
         dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
 
+        # states的形状是 [64, 4]，self.q_net(states)的形状是torch.Size([64, 2])，可以理解为 64*2 的矩阵
+        # 下面这行代码的意思就是取每一行中 self.q_net(states)[i, j] 的值，其中 j = actions[i]
+        # 也就是取某个具体状态下的某个动作的Q值，最后形成一个 64*1 的 tensor
         q_values = self.q_net(states).gather(1, actions)  # Q值
         # 下个状态的最大Q值
         if self.dqn_type == "DoubleDQN":

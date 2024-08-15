@@ -47,6 +47,7 @@ def train_on_policy_agent(env, agent, num_episodes,
         off-policy 则是当buffer数据的数量超过一定值后，才进行Q网络训练。
         """
         agent.update(transition_dict)
+        env.close()
         if is_print:
             print(f"{episode + 1}/{num_episodes}, episode_reward = {episode_reward}")
 
