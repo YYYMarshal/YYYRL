@@ -88,12 +88,12 @@ class ActorCritic:
 class Args:
     agent_name: str = "ActorCritic"
     env_name: str = "CartPole-v0"
-    seed = 0
-    actor_lr = 1e-3
-    critic_lr = 1e-2
-    num_episodes = 1000
-    hidden_dim = 128
-    gamma = 0.98
+    seed: int = 0
+    actor_lr: int = 1e-3
+    critic_lr: int = 1e-2
+    num_episodes: int = 1000
+    hidden_dim: int = 128
+    gamma: float = 0.98
 
 
 def train(args: Args):

@@ -70,11 +70,11 @@ class REINFORCE:
 class Args:
     agent_name: str = "REINFORCE"
     env_name: str = "CartPole-v0"
-    seed = 0
-    learning_rate = 1e-3
-    num_episodes = 1000
-    hidden_dim = 128
-    gamma = 0.98
+    seed: int = 0
+    learning_rate: int = 1e-3
+    num_episodes: int = 1000
+    hidden_dim: int = 128
+    gamma: float = 0.98
 
 
 def train(args: Args):
