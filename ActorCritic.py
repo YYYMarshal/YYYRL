@@ -89,8 +89,8 @@ class Args:
     agent_name: str = "ActorCritic"
     env_name: str = "CartPole-v0"
     seed: int = 0
-    actor_lr: int = 1e-3
-    critic_lr: int = 1e-2
+    actor_lr: float = 1e-3
+    critic_lr: float = 1e-2
     num_episodes: int = 1000
     hidden_dim: int = 128
     gamma: float = 0.98
@@ -111,11 +111,8 @@ def train(args: Args):
     agent = ActorCritic(state_dim, args.hidden_dim, action_dim, args.actor_lr, args.critic_lr, args.gamma, device)
     episode_reward_list = TrainingProcess.train_on_policy_agent(env, agent, args.num_episodes)
 
-    file_name = f"{args.agent_name}_{args.env_name}_{args.seed}"
-    target_folder_name = "results"
-    np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
-
-    return episode_reward_list
+    TrainingProcess.save_npy(args.agent_name, args.env_name, args.seed,
+                             episode_reward_list)
 
 
 def main():

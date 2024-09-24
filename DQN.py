@@ -127,7 +127,7 @@ class Args:
     num_episodes: int = 500
     seed: int = 0
     # learning rate
-    learning_rate: int = 2e-3
+    learning_rate: float = 2e-3
     hidden_dim: int = 128
     gamma: float = 0.98
     epsilon: float = 0.01
@@ -160,9 +160,8 @@ def train(args: Args):
         env, agent, args.num_episodes,
         replay_buffer, args.minimal_size, args.batch_size)
 
-    file_name = f"{args.agent_name}_{args.env_name}_{args.seed}"
-    target_folder_name = "results"
-    np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
+    TrainingProcess.save_npy(args.agent_name, args.env_name, args.seed,
+                             episode_reward_list)
 
     return episode_reward_list
 
