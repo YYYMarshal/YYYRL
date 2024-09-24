@@ -95,6 +95,13 @@ def train_off_policy_agent(env, agent, num_episodes,
     return episode_reward_list
 
 
+def save_npy(agent_name: str, env_name: str, seed: int,
+             episode_reward_list: list):
+    file_name = f"{agent_name}_{env_name}_{seed}"
+    target_folder_name = "results"
+    np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
+
+
 def compute_advantage(gamma, lmbda, td_delta):
     td_delta = td_delta.detach().numpy()
     advantage_list = []
@@ -103,4 +110,4 @@ def compute_advantage(gamma, lmbda, td_delta):
         advantage = gamma * lmbda * advantage + delta
         advantage_list.append(advantage)
     advantage_list.reverse()
-    return torch.tensor(advantage_list, dtype=torch.float)
+    return torch.tensor(np.array(advantage_list), dtype=torch.float)
