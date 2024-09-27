@@ -84,6 +84,9 @@ class DQN:
     def update(self, transition_dict):
         # 示例中，batch_size = 64，state_dim = 4，所以 states.shape 是 torch.Size([64, 4])
         states = torch.tensor(transition_dict['states'], dtype=torch.float).to(self.device)
+        # type(transition_dict["actions"]): <class 'tuple'>
+        # len(transition_dict["actions"]): 64
+        # actions.shape: torch.Size([64, 1])
         actions = torch.tensor(transition_dict['actions']).view(-1, 1).to(self.device)
         rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1, 1).to(self.device)
         next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
@@ -99,7 +102,7 @@ class DQN:
             """            
             也就是选取q_net中n个状态的最大值对应的索引（0或1，因为 action_dim = 2），
             然后摊平变成n行1列的二维数组的类型，
-            再将获得的索引放入对应的target_q_net的n个状态中，获得对应的q值。
+            再将获得的索引（具体的动作，0或1）放入对应的target_q_net的n个状态中，获得对应的q值。
             """
             # xxx.max(1)[1]：xxx的最大值所对应的索引值
             max_action = self.q_net(next_states).max(1)[1].view(-1, 1)
@@ -108,9 +111,11 @@ class DQN:
             """ DQN的情况 """
             # xxx.max(1)[0]：xxx的最大值
             max_next_q_values = self.target_q_net(next_states).max(1)[0].view(-1, 1)
+
         # 如果 dones 的某个值为 1，也就是代表该 Episode 结束，那么 q_targets = rewards
         q_targets = rewards + self.gamma * max_next_q_values * (1 - dones)  # TD误差目标
         dqn_loss = torch.mean(F.mse_loss(q_values, q_targets))  # 均方误差损失函数
+
         self.optimizer.zero_grad()  # PyTorch中默认梯度会累积,这里需要显式将梯度置为0
         dqn_loss.backward()  # 反向传播更新参数
         self.optimizer.step()

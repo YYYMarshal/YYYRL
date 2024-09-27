@@ -19,6 +19,11 @@ pip install matplotlib
 # 2024-8-15 19:37:04
 # env.render() 时出错，解决方案：
 pip install pyglet==1.5.0
+
+# 2024-9-27 16:16:38
+# gym - Box2D - LunarLander-v2
+# AttributeError: module ‘gym.envs.box2d‘ has no attribute ‘LunarLander‘ 
+pip install gym[box2d]
 ```
 
 并将 `mujoco_py` 文件夹放入 `S:\Users\YYYXB\anaconda3\envs\YYYRL\Lib\site-packages` 中。
