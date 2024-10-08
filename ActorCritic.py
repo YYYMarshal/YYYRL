@@ -44,10 +44,12 @@ class ActorCritic:
                  actor_lr, critic_lr, gamma, device):
         # 策略网络
         self.actor = PolicyNet(state_dim, hidden_dim, action_dim).to(device)
-        self.critic = ValueNet(state_dim, hidden_dim).to(device)  # 价值网络
+        # 价值网络
+        self.critic = ValueNet(state_dim, hidden_dim).to(device)
         # 策略网络优化器
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=actor_lr)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=critic_lr)  # 价值网络优化器
+        # 价值网络优化器
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=critic_lr)
         self.gamma = gamma
         self.device = device
 
