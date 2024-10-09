@@ -102,12 +102,13 @@ def save_npy(agent_name: str, env_name: str, seed: int,
     np.save(f"{target_folder_name}/{file_name}", episode_reward_list)
 
 
-def compute_advantage(gamma, lmbda, td_delta):
-    td_delta = td_delta.detach().numpy()
+def compute_advantage(gamma, lmbda, td_error):
+    td_error = td_error.detach().numpy()
     advantage_list = []
     advantage = 0.0
-    for delta in td_delta[::-1]:
-        advantage = gamma * lmbda * advantage + delta
+    # td_error[::-1]: 用于反转列表或数组的顺序
+    for error in td_error[::-1]:
+        advantage = gamma * lmbda * advantage + error
         advantage_list.append(advantage)
     advantage_list.reverse()
     return torch.tensor(np.array(advantage_list), dtype=torch.float)

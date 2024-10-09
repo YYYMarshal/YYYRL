@@ -59,9 +59,9 @@ class PPO:
         dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
 
         td_target = rewards + self.gamma * self.critic(next_states) * (1 - dones)
-        td_delta = td_target - self.critic(states)
+        td_error = td_target - self.critic(states)
         advantage = TrainingProcess.compute_advantage(
-            self.gamma, self.lmbda, td_delta.cpu()).to(self.device)
+            self.gamma, self.lmbda, td_error.cpu()).to(self.device)
         old_log_probs = torch.log(self.actor(states).gather(1, actions)).detach()
 
         for _ in range(self.epochs):
